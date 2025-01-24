@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:sub_tracker/models/subscription.dart';
+import 'package:sub_tracker/providers/subscription_provider.dart';
 
 class SubscriptionProvider extends ChangeNotifier {
   final List<Subscription> _subscriptions = [];
