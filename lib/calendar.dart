@@ -1,5 +1,8 @@
 // Takvim Ekranı
 import 'package:table_calendar/table_calendar.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import './providers/subscription_provider.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
