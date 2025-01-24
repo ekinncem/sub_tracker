@@ -1,3 +1,24 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class Subscription {
+  final String category;
+  final double price;
+
+  Subscription({required this.category, required this.price});
+}
+
+class SubscriptionProvider extends ChangeNotifier {
+  List<Subscription> _subscriptions = [];
+
+  List<Subscription> get subscriptions => _subscriptions;
+
+  void addSubscription(Subscription subscription) {
+    _subscriptions.add(subscription);
+    notifyListeners();
+  }
+}
+
 // İstatistik Ekranı
 class StatisticsScreen extends StatelessWidget {
   @override
