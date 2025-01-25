@@ -1,191 +1,212 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
-import 'package:sub_tracker/models/subscription.dart';
-import 'package:sub_tracker/providers/subscription_provider.dart';
+import 'package:subscription_tracker/database/database_helper.dart';
+import 'package:subscription_tracker/models/subscription.dart';
+import 'package:intl/intl.dart';
 
-class SubscriptionProvider extends ChangeNotifier {
-  final List<Subscription> _subscriptions = [];
+void main() => runApp(MyApp());
 
-  List<Subscription> get subscriptions => _subscriptions;
-
-  void addSubscription(Subscription subscription) {
-    _subscriptions.add(subscription);
-    notifyListeners();
-  }
-}
-
-class Subscription {
-  final String id;
-  final String name;
-  final double price;
-  final DateTime startDate;
-  final DateTime renewalDate;
-  final String category;
-
-  Subscription({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.startDate,
-    required this.renewalDate,
-    required this.category,
-  });
-}
-
-class AddSubscriptionScreen extends StatefulWidget {
+class MyApp extends StatelessWidget {
   @override
-  _AddSubscriptionScreenState createState() => _AddSubscriptionScreenState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Abonelik Takip',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: SubscriptionList(),
+    );
+  }
 }
 
-class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _priceController = TextEditingController();
-  
-  DateTime? _startDate;
-  DateTime? _renewalDate;
-  String _selectedCategory = 'Diğer';
+class SubscriptionList extends StatefulWidget {
+  @override
+  _SubscriptionListState createState() => _SubscriptionListState();
+}
 
-  // Kategori listesi
-  final List<String> _categories = [
-    'Müzik', 
-    'Video', 
-    'Yazılım', 
-    'Oyun', 
-    'Eğitim', 
-    'Sağlık', 
-    'Diğer'
-  ];
+class _SubscriptionListState extends State<SubscriptionList> {
+  late Future<List<Subscription>> _subscriptions;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  Future<void> _selectStartDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null && picked != _startDate) {
-      setState(() {
-        _startDate = picked;
-        // Yenileme tarihini otomatik hesapla
-        _renewalDate = DateTime(
-          picked.year, 
-          picked.month + 1, 
-          picked.day
-        );
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    _refreshList();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final subscription = Subscription(
-        id: Uuid().v4(),
-        name: _nameController.text,
-        price: double.parse(_priceController.text),
-        startDate: _startDate ?? DateTime.now(),
-        renewalDate: _renewalDate ?? DateTime.now().add(Duration(days: 30)),
-        category: _selectedCategory,
-      );
-
-      Provider.of<SubscriptionProvider>(context, listen: false)
-        .addSubscription(subscription);
-
-      Navigator.pop(context);
-    }
+  void _refreshList() {
+    _subscriptions = _dbHelper.getAllSubscriptions();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Yeni Abonelik Ekle')),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
+      appBar: AppBar(
+        title: Text('Aboneliklerim'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () => _showSubscriptionForm(),
+      ),
+      body: FutureBuilder<List<Subscription>>(
+        future: _subscriptions,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('Abonelik bulunamadı'));
+          }
+
+          final subscriptions = snapshot.data!;
+          final total = subscriptions.fold(0.0, (sum, item) => sum + item.price);
+
+          return Column(
             children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Abonelik Adı',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen abonelik adını giriniz';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _priceController,
-                decoration: InputDecoration(
-                  labelText: 'Aylık Ücret',
-                  suffixText: 'TL',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen ücreti giriniz';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: InputDecoration(
-                  labelText: 'Kategori',
-                  border: OutlineInputBorder(),
-                ),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-              ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _selectStartDate(context),
-                      child: Text(_startDate == null 
-                        ? 'Başlangıç Tarihi Seç' 
-                        : 'Tarih: ${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
+              Expanded(
+                child: ListView.builder(
+                  itemCount: subscriptions.length,
+                  itemBuilder: (context, index) {
+                    final sub = subscriptions[index];
+                    return Dismissible(
+                      key: Key(sub.id.toString()),
+                      background: Container(color: Colors.red),
+                      onDismissed: (direction) {
+                        _dbHelper.deleteSubscription(sub.id!);
+                        _refreshList();
+                      },
+                      child: ListTile(
+                        title: Text(sub.name),
+                        subtitle: Text(
+                            '${DateFormat('dd/MM/yyyy').format(sub.date)} - ${sub.price.toStringAsFixed(2)}₺'),
+                        trailing: IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () => _showSubscriptionForm(subscription: sub),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-              SizedBox(height: 16),
-              Text(
-                _renewalDate != null 
-                  ? 'Yenileme Tarihi: ${_renewalDate!.day}/${_renewalDate!.month}/${_renewalDate!.year}'
-                  : 'Yenileme Tarihi Hesaplanacak',
-                style: TextStyle(color: Colors.grey),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: Text('Aboneliği Kaydet'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Toplam Aylık Maliyet: ${total.toStringAsFixed(2)}₺',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
-          ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showSubscriptionForm({Subscription? subscription}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _SubscriptionForm(
+          subscription: subscription,
+          onSaved: () {
+            _refreshList();
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SubscriptionForm extends StatefulWidget {
+  final Subscription? subscription;
+  final Function onSaved;
+
+  const _SubscriptionForm({this.subscription, required this.onSaved});
+
+  @override
+  __SubscriptionFormState createState() => __SubscriptionFormState();
+}
+
+class __SubscriptionFormState extends State<_SubscriptionForm> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _priceController;
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+        text: widget.subscription?.name ?? '');
+    _priceController = TextEditingController(
+        text: widget.subscription?.price.toString() ?? '');
+    _selectedDate = widget.subscription?.date ?? DateTime.now();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Abonelik Adı'),
+              validator: (value) =>
+                  value!.isEmpty ? 'Lütfen bir ad girin' : null,
+            ),
+            TextFormField(
+              controller: _priceController,
+              decoration: InputDecoration(labelText: 'Aylık Ücret (₺)'),
+              keyboardType: TextInputType.number,
+              validator: (value) =>
+                  value!.isEmpty ? 'Lütfen ücret girin' : null,
+            ),
+            ListTile(
+              title: Text(_selectedDate == null
+                  ? 'Tarih Seçin'
+                  : DateFormat('dd/MM/yyyy').format(_selectedDate!)),
+              trailing: Icon(Icons.calendar_today),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate ?? DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (date != null) {
+                  setState(() => _selectedDate = date);
+                }
+              },
+            ),
+            ElevatedButton(
+              child: Text('Kaydet'),
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  final subscription = Subscription(
+                    id: widget.subscription?.id,
+                    name: _nameController.text,
+                    price: double.parse(_priceController.text),
+                    date: _selectedDate!,
+                  );
+
+                  if (subscription.id == null) {
+                    await DatabaseHelper.instance.insertSubscription(subscription);
+                  } else {
+                    await DatabaseHelper.instance.updateSubscription(subscription);
+                  }
+
+                  widget.onSaved();
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
