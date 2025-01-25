@@ -23,7 +23,7 @@ class SubscriptionList extends StatefulWidget {
 
 class _SubscriptionListState extends State<SubscriptionList> {
   late Future<List<Subscription>> _subscriptions;
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final _dbHelper = db.DatabaseHelper.instance;
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _SubscriptionListState extends State<SubscriptionList> {
   }
 
   void _refreshList() {
-    _subscriptions = _dbHelper.getAllSubscriptions();
+    _subscriptions = _dbHelper.getAllSubscriptions() as Future<List<Subscription>>;
   }
 
   @override
@@ -197,9 +197,9 @@ class __SubscriptionFormState extends State<_SubscriptionForm> {
                   );
 
                   if (subscription.id == null) {
-                    await DatabaseHelper.instance.insertSubscription(subscription);
+                    await db.DatabaseHelper.instance.insertSubscription(subscription as db.Subscription);
                   } else {
-                    await DatabaseHelper.instance.updateSubscription(subscription);
+                    await db.DatabaseHelper.instance.updateSubscription(subscription as db.Subscription);
                   }
 
                   widget.onSaved();
