@@ -3,27 +3,33 @@ import 'package:sub_tracker/database/database_helper.dart' as db;
 import 'package:sub_tracker/models/subscription.dart';
 import 'package:intl/intl.dart';
 
-void main() => runApp(MyApp());
+import 'database/database_helper.dart';
+
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Abonelik Takip',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: SubscriptionList(),
+      home: const SubscriptionList(),
     );
   }
 }
 
 class SubscriptionList extends StatefulWidget {
+  const SubscriptionList({super.key});
+
   @override
   _SubscriptionListState createState() => _SubscriptionListState();
 }
 
 class _SubscriptionListState extends State<SubscriptionList> {
   late Future<List<Subscription>> _subscriptions;
-  final _dbHelper = db.DatabaseHelper.instance;
+  final db.DatabaseHelper _dbHelper = db.DatabaseHelper.instance;
 
   @override
   void initState() {
@@ -32,28 +38,28 @@ class _SubscriptionListState extends State<SubscriptionList> {
   }
 
   void _refreshList() {
-    _subscriptions = _dbHelper.getAllSubscriptions() as Future<List<Subscription>>;
+    _subscriptions = _dbHelper.getAllSubscriptions();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Aboneliklerim'),
+        title: const Text('Aboneliklerim'),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () => _showSubscriptionForm(),
       ),
       body: FutureBuilder<List<Subscription>>(
         future: _subscriptions,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Abonelik bulunamadı'));
+            return const Center(child: Text('Abonelik bulunamadı'));
           }
 
           final subscriptions = snapshot.data!;
@@ -78,7 +84,7 @@ class _SubscriptionListState extends State<SubscriptionList> {
                         subtitle: Text(
                             '${DateFormat('dd/MM/yyyy').format(sub.date)} - ${sub.price.toStringAsFixed(2)}₺'),
                         trailing: IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: const Icon(Icons.edit),
                           onPressed: () => _showSubscriptionForm(subscription: sub),
                         ),
                       ),
@@ -90,7 +96,7 @@ class _SubscriptionListState extends State<SubscriptionList> {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   'Toplam Aylık Maliyet: ${total.toStringAsFixed(2)}₺',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -157,13 +163,13 @@ class __SubscriptionFormState extends State<_SubscriptionForm> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Abonelik Adı'),
+              decoration: const InputDecoration(labelText: 'Abonelik Adı'),
               validator: (value) =>
                   value!.isEmpty ? 'Lütfen bir ad girin' : null,
             ),
             TextFormField(
               controller: _priceController,
-              decoration: InputDecoration(labelText: 'Aylık Ücret (₺)'),
+              decoration: const InputDecoration(labelText: 'Aylık Ücret (₺)'),
               keyboardType: TextInputType.number,
               validator: (value) =>
                   value!.isEmpty ? 'Lütfen ücret girin' : null,
@@ -172,7 +178,7 @@ class __SubscriptionFormState extends State<_SubscriptionForm> {
               title: Text(_selectedDate == null
                   ? 'Tarih Seçin'
                   : DateFormat('dd/MM/yyyy').format(_selectedDate!)),
-              trailing: Icon(Icons.calendar_today),
+              trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final date = await showDatePicker(
                   context: context,
@@ -186,7 +192,7 @@ class __SubscriptionFormState extends State<_SubscriptionForm> {
               },
             ),
             ElevatedButton(
-              child: Text('Kaydet'),
+              child: const Text('Kaydet'),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   final subscription = Subscription(
@@ -197,9 +203,9 @@ class __SubscriptionFormState extends State<_SubscriptionForm> {
                   );
 
                   if (subscription.id == null) {
-                    await db.DatabaseHelper.instance.insertSubscription(subscription as db.Subscription);
+                    await DatabaseHelper.instance.insertSubscription(subscription);
                   } else {
-                    await db.DatabaseHelper.instance.updateSubscription(subscription as db.Subscription);
+                    await DatabaseHelper.instance.updateSubscription(subscription);
                   }
 
                   widget.onSaved();

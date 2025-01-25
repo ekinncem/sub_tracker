@@ -2,38 +2,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/subscription.dart';
 
-class Subscription {
-  final int? id;
-  final String name;
-  final double price;
-  final String date;
-
-  Subscription({
-    this.id,
-    required this.name,
-    required this.price,
-    required this.date,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'price': price,
-      'date': date,
-    };
-  }
-
-  factory Subscription.fromMap(Map<String, dynamic> map) {
-    return Subscription(
-      id: map['id'],
-      name: map['name'],
-      price: map['price'],
-      date: map['date'],
-    );
-  }
-}
-
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
