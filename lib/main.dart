@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:subscription_tracker/database/database_helper.dart';
-import 'package:subscription_tracker/models/subscription.dart';
+import 'package:sub_tracker/database/database_helper.dart' as db;
+import 'package:sub_tracker/models/subscription.dart';
 import 'package:intl/intl.dart';
 
 void main() => runApp(MyApp());
