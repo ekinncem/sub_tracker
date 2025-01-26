@@ -82,7 +82,7 @@ class _SubscriptionListState extends State<SubscriptionList> {
                       child: ListTile(
                         title: Text(sub.name),
                         subtitle: Text(
-                            '${DateFormat('dd/MM/yyyy').asd(sub.date)} - ${sub.price.toStringAsFixed(2)}₺'),
+                            '${DateFormat('dd/MM/yyyy').format(sub.date)} - ${sub.price.toStringAsFixed(2)}₺'),
                         trailing: IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () => _showSubscriptionForm(subscription: sub),
