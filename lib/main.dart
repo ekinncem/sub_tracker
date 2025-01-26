@@ -84,7 +84,7 @@ class _SubscriptionListState extends State<SubscriptionList> {
                         subtitle: Text(
                             '${DateFormat('dd/MM/yyyy').format(sub.date)} - ${sub.price.toStringAsFixed(2)}₺'),
                         trailing: IconButton(
-                          icon: const Icon(Icons.edit),
+                          icon: const Icos(Icons.edit),
                           onPressed: () => _showSubscriptionForm(subscription: sub),
                         ),
                       ),
