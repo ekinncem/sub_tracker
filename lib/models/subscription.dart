@@ -16,7 +16,7 @@ class Subscription {
       'id': id,
       'name': name,
       'price': price,
-      'date': date.(),
+      'date': date,
     };
   }
 
