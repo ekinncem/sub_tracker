@@ -53,7 +53,7 @@ class DatabaseHelper {
       'subscriptions',
       subscription.toMap(),
       where: 'id = ?',
-      whereArgs: [subscrasdiption.id],
+      whereArgs: [subscription.id],
     );
   }
 
