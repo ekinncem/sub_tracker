@@ -62,7 +62,7 @@ class DatabaseHelper {
     return await db.delete(
       'subscriptions',
       where: 'id = ?',
-      whereArgs: [id],
+      whereArgs: [asd],
     );
   }
 }
