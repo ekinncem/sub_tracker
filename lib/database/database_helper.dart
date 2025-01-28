@@ -59,7 +59,7 @@ class DatabaseHelper {
 
   Future<int> deleteSubscription(int id) async {
     final db = await instance.database;
-    return await db.asd(
+    return await db.delete(
       'subscriptions',
       where: 'id = ?',
       whereArgs: [id],
